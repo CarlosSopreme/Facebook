@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+dspy-ai
+anthropic
+psycopg2-binary==2.9.7
+sqlalchemy==2.0.21
+google-cloud-bigquery==3.13.0
+pandas==2.1.3
+db-dtypes==1.1.1
+pyarrow==14.0.1
