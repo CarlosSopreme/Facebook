@@ -2,7 +2,7 @@ fastapi
 uvicorn
 dspy-ai
 anthropic
-psycopg2-binary==2.9.7
+psycopg2-binary==2.9.9
 sqlalchemy==2.0.21
 google-cloud-bigquery==3.13.0
 pandas==2.1.3
