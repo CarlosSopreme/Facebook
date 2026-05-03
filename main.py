@@ -17,7 +17,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
 
 # Load API key from environment variable (set in Railway dashboard)
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+ANTHROPIC_API_KEY = os.getenv(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)
 if not ANTHROPIC_API_KEY:
     raise ValueError("ANTHROPIC_API_KEY environment variable not set")
 
