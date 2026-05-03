@@ -143,7 +143,7 @@ DO NOT:
 class CustomAnthropic(dspy.LM):
     def __init__(self, api_key):
         self.client = Anthropic(api_key=api_key)
-        self.model = "claude-sonnet-4-20250514"
+        self.model = "claude-sonnet-4-5"
         self.kwargs = {"max_tokens": 1000}
         self.history = []
         
