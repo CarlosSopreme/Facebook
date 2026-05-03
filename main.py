@@ -54,7 +54,11 @@ class ResponseEntry(Base):
     reply = Column(Text)
     reasoning = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    
+class ProcessedCommentRecord(Base):
+    __tablename__ = "processed_comments"
+    comment_id = Column(String, primary_key=True, index=True)
+    processed_at = Column(DateTime, default=datetime.utcnow)
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -632,6 +636,40 @@ async def process_comment(request: CommentRequest):
     try:
         comment_text = request.get_comment_text()
         comment_id = request.get_comment_id()
+        # Dedup: check if we've already processed this comment
+        db = SessionLocal()
+        try:
+            existing = db.query(ProcessedCommentRecord).filter(
+                ProcessedCommentRecord.comment_id == comment_id
+            ).first()
+            if existing:
+                return ProcessedComment(
+                    commentId=comment_id,
+                    original_comment=comment_text,
+                    category="skip",
+                    action="skip",
+                    reply="",
+                    confidence_score=1.0,
+                    approved="skip",
+                    reasoning="Comment already processed - skipping duplicate"
+                )
+            # Record this comment as processed
+            db.add(ProcessedCommentRecord(comment_id=comment_id))
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            return ProcessedComment(
+                commentId=comment_id,
+                original_comment=comment_text,
+                category="skip",
+                action="skip",
+                reply="",
+                confidence_score=1.0,
+                approved="skip",
+                reasoning="Comment already processed - skipping duplicate"
+            )
+        finally:
+            db.close()
         
         # Use centralized function
         ai_result = process_comment_with_ai(comment_text, comment_id)
