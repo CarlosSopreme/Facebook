@@ -59,6 +59,12 @@ class ProcessedCommentRecord(Base):
     __tablename__ = "processed_comments"
     comment_id = Column(String, primary_key=True, index=True)
     processed_at = Column(DateTime, default=datetime.utcnow)
+    # Known Facebook page IDs — used to filter out our own comments
+# and prevent the bot from replying to itself (feedback loop protection)
+KNOWN_PAGE_IDS = {
+    "1002610136278410",  # Test Page
+    "920415124493969",   # Sopreme Soursop
+}
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -339,6 +345,7 @@ class CommentRequest(BaseModel):
     message: Optional[str] = None
     commentId: Optional[str] = None
     postId: Optional[str] = None
+    fromId: Optional[str] = None
     created_time: Optional[str] = ""
     memory_context: Optional[str] = ""
     
@@ -636,6 +643,21 @@ async def process_comment(request: CommentRequest):
     try:
         comment_text = request.get_comment_text()
         comment_id = request.get_comment_id()
+
+        # Bot-loop protection — skip comments from our own pages
+        from_id = (request.fromId or "").strip()
+        if from_id and from_id in KNOWN_PAGE_IDS:
+            return ProcessedComment(
+                commentId=comment_id,
+                original_comment=comment_text,
+                category="self_comment",
+                action="skip",
+                reply="",
+                confidence_score=1.0,
+                approved="skip",
+                reasoning=f"Comment is from one of our pages (fromId={from_id}) — skipping to prevent feedback loop"
+            )
+            
         # Dedup: check if we've already processed this comment
         db = SessionLocal()
         try:
