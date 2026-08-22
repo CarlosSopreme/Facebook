@@ -289,25 +289,27 @@ def reload_training_data():
     return len(TRAINING_DATA)
 
 def filter_numerical_values(text):
-    """Remove any numerical values (dollars, percentages, rates) from response text"""
-    
-    # Remove dollar amounts ($X, $X.XX, $X,XXX, etc.)
+    """Strip invented dollar figures from replies.
+
+    Product prices and shipping quotes change, so the model is told not to state
+    them and this is the backstop. The ONE approved figure is the $150 free
+    shipping threshold, so it is protected before the strip and restored after.
+    Non-dollar facts (57g sugar, 10g fiber, GI 50.25, 14 Brix) are untouched.
+    """
+    KEEP = "\x00FREESHIPTHRESHOLD\x00"
+    text = re.sub(r'\$\s?150(?:\.00)?\b', KEEP, text)
+
+    # Remove any other dollar amounts the model may have invented
     text = re.sub(r'\$[\d,]+(?:\.\d{2})?', '', text)
-    
-    # Remove percentages (X%, X.X%, XX.XX%, etc.)
+
+    # Remove percentages
     text = re.sub(r'\b\d+(?:\.\d+)?%', '', text)
-    
-    # Remove APR/interest rate patterns (X.X% APR, X% interest, etc.)
-    text = re.sub(r'\b\d+(?:\.\d+)?\s*%?\s*(?:APR|apr|interest|rate)', '', text)
-    
-    # Remove standalone numbers that might be rates (like "4.5" or "6.2")
-    text = re.sub(r'\b\d+\.\d+\b(?=\s*(?:rate|APR|interest|%|percent))', '', text)
-    
-    # Clean up any double spaces or awkward spacing created by removals
+
+    # Tidy spacing created by removals
     text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'\s+([,.!?])', r'\1', text)  # Remove space before punctuation
-    
-    return text.strip()
+    text = re.sub(r'\s+([,.!?])', r'\1', text)
+
+    return text.replace(KEEP, "$150").strip()
 
 # Database dependency
 def get_db():
