@@ -341,10 +341,18 @@ Respond in this JSON format:
     try:
         response = claude.basic_request(prompt)
         response_clean = response.strip()
-        
+
         if response_clean.startswith('```'):
             lines = response_clean.split('\n')
             response_clean = '\n'.join([line for line in lines if not line.startswith('```')])
+
+        # The model sometimes wraps the JSON in a sentence or two. Take the
+        # outermost {...} rather than requiring the whole response to be JSON:
+        # a parse failure here silently degrades every comment to leave_alone.
+        if not response_clean.startswith('{'):
+            first, last = response_clean.find('{'), response_clean.rfind('}')
+            if first != -1 and last > first:
+                response_clean = response_clean[first:last + 1]
         
         try:
             result = json.loads(response_clean)
@@ -353,9 +361,6 @@ Respond in this JSON format:
             reply = result.get('reply', '')
             if reply:
                 reply = filter_numerical_values(reply.strip())
-                # Ensure phone number format is correct if present
-                if '844' in reply and '679-1188' in reply:
-                    reply = re.sub(r'\(?844\)?[-.\s]*679[-.\s]*1188', '(844) 679-1188', reply)
             
             return {
                 'sentiment': result.get('sentiment', 'Neutral'),
@@ -367,6 +372,7 @@ Respond in this JSON format:
             }
             
         except json.JSONDecodeError:
+            print(f"JSON parse failed, falling back. Raw response: {response[:400]}")
             # Enhanced fallback parsing
             if any(word in response.upper() for word in ['DELETE', 'SCAM', 'FALSE INFO', 'LIES', 'FRAUD']):
                 action = 'DELETE'
