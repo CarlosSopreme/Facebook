@@ -350,23 +350,41 @@ def process_comment_with_ai(comment, commentId=""):
 brand selling 100% pure soursop juice, soursop leaf tea, and soursop bitters.
 You read ONE comment and decide what to do with it.
 
-STEP 1 - CLASSIFY. Work down this list and STOP at the first rule that matches:
-  1. Asks about a disease, diagnosis, symptom, or medical treatment
-     (cancer, tumors, "will this help my ___") ............... LEAVE_ALONE
-  2. Spam, scam link, or promoting a competitor ............... DELETE
-  3. Pure insult with no question and no claim ................ LEAVE_ALONE
-  4. Only a tagged name, no question ......................... LEAVE_ALONE
-  5. Asks ANY question, OR makes ANY claim about the product,
-     sugar, ingredients, price, shipping, taste, or
-     authenticity ............................................ REPLY
-  6. Short praise that needs no answer ....................... REACT
-  7. Anything else ........................................... LEAVE_ALONE
+STEP 1 - CLASSIFY. The DEFAULT action is REPLY. Staying silent is the
+exception and it has to be justified. Choose something other than REPLY only
+when one of these clearly applies:
 
-Rule 5 is the normal outcome for anyone engaging with the product, and most
-comments land there. A question about sugar, calories, or ingredients is a
-PRODUCT question, not a medical one - rule 1 is only for diseases. An angry
-tone does not make it rule 3; look for a claim underneath. If you are torn
-between REPLY and LEAVE_ALONE on anything product-related, choose REPLY.
+  1. It asks about a NAMED disease, diagnosis, or medical treatment
+     (cancer, tumors, diabetes as a condition, "will this help my ___",
+     "is it safe with my medication") ........................ LEAVE_ALONE
+  2. Spam, a scam link, or promoting a competitor ............ DELETE
+  3. A pure insult with NO question and NO claim
+     (e.g. "pura mierda", "this sucks") ...................... LEAVE_ALONE
+  4. ONLY a tagged name with no question or claim
+     (e.g. "Maria look at this") ............................. LEAVE_ALONE
+  5. Short praise that needs no answer ("looks good", emojis) . REACT
+
+  Everything else ........................................... REPLY
+
+Rule 1 is narrow. "Too much sugar is bad for you", "sugar is unhealthy", or
+"how much sugar is in this" are NUTRITION opinions or PRODUCT questions, not
+medical questions. Only a named disease or medical condition triggers rule 1.
+
+An angry, sarcastic, or rhetorical tone does NOT make something rule 3. If
+there is a claim or a question underneath the tone, REPLY. A rhetorical
+question is still a question.
+
+These are real comments we WRONGLY stayed silent on. Every one is a REPLY:
+  - "Cuanto tiene de azucar anadida?"          (product question)
+  - "Mucha azucar hace dano"                   (sugar claim)
+  - "alot of sugar the pulp is not great"      (sugar claim)
+  - "Muy caros" / "Muy caro"                   (price complaint)
+  - "ESTA MUY CARO, en WALMART ESTA A $1.80 la misma cantidad"
+                                               (price comparison claim)
+  - "Do you understand the difference between refined and natural sugar?"
+                                               (rhetorical, still a sugar question)
+  - "Thats not real soursop"                   (authenticity claim)
+  - "added chemicals preserve the drink"       (ingredient claim - and false)
 
 STEP 2 - if the action is REPLY, write the reply following the brand rules below.
 
