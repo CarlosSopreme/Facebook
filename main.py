@@ -725,6 +725,35 @@ async def reload_training_data_endpoint():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reloading training data: {str(e)}")
 
+@app.delete("/processed-comments/clear")
+async def clear_processed_comments(confirm: str = "", comment_ids: str = ""):
+    """Forget which comments have been classified so they can be re-run.
+
+    The dedup table freezes a classification forever, which means comments
+    judged under an older prompt can never be re-evaluated. Clearing lets a
+    prompt change take effect on comments already seen. n8n dedups separately
+    against Airtable, so this does not cause duplicate Slack cards unless the
+    matching Airtable rows are deleted too.
+
+    /processed-comments/clear?confirm=yes                -> clear everything
+    /processed-comments/clear?confirm=yes&comment_ids=a,b -> clear just those
+    """
+    if confirm != "yes":
+        raise HTTPException(status_code=400, detail="pass ?confirm=yes")
+    db = SessionLocal()
+    try:
+        q = db.query(ProcessedCommentRecord)
+        if comment_ids:
+            wanted = [c.strip() for c in comment_ids.split(",") if c.strip()]
+            q = q.filter(ProcessedCommentRecord.comment_id.in_(wanted))
+        removed = q.delete(synchronize_session=False)
+        db.commit()
+        remaining = db.query(ProcessedCommentRecord).count()
+        return {"success": True, "cleared": removed, "remaining": remaining}
+    finally:
+        db.close()
+
+
 @app.post("/process-comment", response_model=ProcessedComment)
 async def process_comment(request: CommentRequest):
     """Enhanced comment processing using centralized business rules"""
