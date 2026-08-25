@@ -882,7 +882,7 @@ async def process_feedback(request: FeedbackRequest):
         original_action = request.original_action.strip().lower()
         feedback_text = request.feedback_text.strip()
         
-        feedback_prompt = f"""You are improving a response based on human feedback for LeaseEnd.com.
+        feedback_prompt = f"""You are improving a SOPREME Soursop reply based on human feedback.
 
 ORIGINAL COMMENT: "{original_comment}"
 YOUR ORIGINAL RESPONSE: "{original_response}"
